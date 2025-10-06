@@ -111,16 +111,6 @@ h2 {
   color: #fff;
 }
 
-.email-link {
-  color: #ff1744;
-  font-weight: bold;
-  text-decoration: underline;
-}
-
-.email-link:hover {
-  color: #0ff;
-}
-
 ul {
   padding-left: 0;
   list-style-position: inside;
