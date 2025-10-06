@@ -40,9 +40,8 @@ main {
   max-width: 700px;
   width: 100%;
   padding: 2rem;
-  background: rgba(10, 0, 51, 0.85);
+  /* Removed background and box-shadow for unified galaxy/starry background */
   border-radius: 18px;
-  box-shadow: 0 8px 32px 0 rgba(255, 23, 68, 0.37), 0 0 40px 10px #ff174444; /* Neon red shadow */
   margin: 0;
   text-align: center;
 }
