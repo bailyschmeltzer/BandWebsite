@@ -4,14 +4,8 @@ body {
   color: #fff;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 50% 40%, #ff1744 0%, #2d0a4a 60%, #1a0033 100%),
-    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 2px),
-    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 3px);
-  background-size:
-    100% 100%,
-    1200px 800px,
-    800px 600px;
-  background-blend-mode: lighten;
+    radial-gradient(circle at 50% 40%, #ff1744 0%, #2d0a4a 60%, #1a0033 100%);
+  background-size: cover;
   position: relative;
   display: flex;
   align-items: center;
@@ -35,9 +29,12 @@ body::after {
   top: 0; left: 0; right: 0; bottom: 0;
   z-index: 0;
   pointer-events: none;
-  /* Remove star field from ::after, now merged into body background */
-  background: none;
-  opacity: 1;
+  /* Star field effect restored to ::after for proper layering */
+  background-image:
+    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 2px),
+    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 3px);
+  background-size: 1200px 800px, 800px 600px;
+  opacity: 0.18;
 }
 
 main {
