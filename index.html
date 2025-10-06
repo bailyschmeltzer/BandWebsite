@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <canvas class="star-canvas"></canvas>
+  <canvas id="star-canvas" class="star-canvas"></canvas>
   <main>
     <img src="https://i.imgur.com/aeOZn7E.png" alt="Neon Oblivion Logo" class="logo">
     <section id="about">
@@ -27,7 +27,14 @@
 <script>
 // Draw random stars on the canvas background
 function drawStars() {
-  const canvas = document.querySelector('.star-canvas');
+  const canvas = document.getElementById('star-canvas');
+  canvas.style.position = 'fixed';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.width = '100vw';
+  canvas.style.height = '100vh';
+  canvas.style.zIndex = '-1';
+  canvas.style.pointerEvents = 'none';
   const ctx = canvas.getContext('2d');
   const w = window.innerWidth;
   const h = window.innerHeight;
