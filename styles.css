@@ -22,16 +22,7 @@ body::before {
 
 /* Star field effect */
 body::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 0;
-  pointer-events: none;
-  /* Star field effect restored to ::after for proper layering */
-  background-image:
-    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 3px);
-  background-size: 1000px 700px;
-  opacity: 0.10;
+  display: none;
 }
 
 main {
