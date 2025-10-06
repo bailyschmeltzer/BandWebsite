@@ -4,6 +4,10 @@ body {
   color: #fff;
   min-height: 100vh;
   background: #0a0114;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .star-canvas {
@@ -15,11 +19,6 @@ body {
   z-index: -1;
   pointer-events: none;
   display: block;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
 }
 
 body::before {
