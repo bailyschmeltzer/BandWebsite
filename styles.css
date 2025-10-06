@@ -1,13 +1,37 @@
 body {
   margin: 0;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
+  font-family: 'Orbitron', 'Segoe UI', 'Arial', sans-serif;
   color: #fff;
   min-height: 100vh;
-  background: #000;
+  background: radial-gradient(circle at 50% 40%, #ff1744 0%, #2d0a4a 60%, #0a0033 100%);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+body::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: transparent;
+}
+
+/* Star field effect */
+body::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 2px),
+    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 3px);
+  background-size: 1200px 800px, 800px 600px;
+  opacity: 0.15;
 }
 
 main {
@@ -16,9 +40,9 @@ main {
   max-width: 700px;
   width: 100%;
   padding: 2rem;
-  background: #000;
+  background: rgba(10, 0, 51, 0.85);
   border-radius: 18px;
-  box-shadow: 0 8px 32px 0 rgba(255, 23, 68, 0.37); /* Neon red shadow */
+  box-shadow: 0 8px 32px 0 rgba(255, 23, 68, 0.37), 0 0 40px 10px #ff174444; /* Neon red shadow */
   margin: 0;
   text-align: center;
 }
@@ -49,9 +73,16 @@ section {
 }
 
 h2 {
-  color: #0ff;
+  color: #ff1744;
   margin-bottom: 0.5rem;
-  text-shadow: 0 0 8px #0ff;
+  font-family: 'Orbitron', 'Segoe UI', 'Arial', sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 0.08em;
+  text-shadow:
+    0 0 8px #fff,
+    0 0 16px #ff1744,
+    0 0 32px #ff1744,
+    0 0 48px #fff;
 }
 
 .links {
@@ -62,21 +93,22 @@ h2 {
 }
 
 .btn {
-  background: linear-gradient(90deg, #ff1744 0%, #0ff 100%);
-  color: #111;
+  background: linear-gradient(90deg, #ff1744 0%, #2d0a4a 100%);
+  color: #fff;
   padding: 0.7em 2em;
   border: none;
   border-radius: 30px;
   font-size: 1.1em;
   font-weight: bold;
   text-decoration: none;
-  box-shadow: 0 0 10px #0ff, 0 0 20px #ff1744;
+  box-shadow: 0 0 10px #fff, 0 0 20px #ff1744;
   transition: background 0.2s, color 0.2s;
+  text-shadow: 0 0 8px #fff, 0 0 16px #ff1744;
 }
 
 .btn:hover {
-  background: linear-gradient(90deg, #0ff 0%, #ff1744 100%);
-  color: #222;
+  background: linear-gradient(90deg, #ff1744 0%, #0a0033 100%);
+  color: #fff;
 }
 
 .email-link {
