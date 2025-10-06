@@ -3,7 +3,7 @@ body {
   font-family: 'Orbitron', 'Segoe UI', 'Arial', sans-serif;
   color: #fff;
   min-height: 100vh;
-  background: #14002a;
+  background: #0a0114;
   position: relative;
   display: flex;
   align-items: center;
@@ -29,10 +29,9 @@ body::after {
   pointer-events: none;
   /* Star field effect restored to ::after for proper layering */
   background-image:
-    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 2px),
     repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 3px);
-  background-size: 1200px 800px, 800px 600px;
-  opacity: 0.18;
+  background-size: 1000px 700px;
+  opacity: 0.10;
 }
 
 main {
