@@ -3,7 +3,15 @@ body {
   font-family: 'Orbitron', 'Segoe UI', 'Arial', sans-serif;
   color: #fff;
   min-height: 100vh;
-  background: radial-gradient(circle at 50% 40%, #ff1744 0%, #2d0a4a 60%, #1a0033 100%);
+  background:
+    radial-gradient(circle at 50% 40%, #ff1744 0%, #2d0a4a 60%, #1a0033 100%),
+    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 2px),
+    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 3px);
+  background-size:
+    100% 100%,
+    1200px 800px,
+    800px 600px;
+  background-blend-mode: lighten;
   position: relative;
   display: flex;
   align-items: center;
@@ -27,15 +35,9 @@ body::after {
   top: 0; left: 0; right: 0; bottom: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    linear-gradient(0deg, #1a0033 0%, #2d0a4a 100%),
-    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 2px),
-    repeating-radial-gradient(circle, #fff 0px, #fff 1px, transparent 3px);
-  background-size:
-    100% 100%,
-    1200px 800px,
-    800px 600px;
-  opacity: 0.18;
+  /* Remove star field from ::after, now merged into body background */
+  background: none;
+  opacity: 1;
 }
 
 main {
@@ -46,6 +48,8 @@ main {
   margin: 0;
   text-align: center;
   /* No border-radius, no z-index, no background, no box-shadow for seamless background */
+  box-shadow: none;
+  border: none;
 }
 
 .logo {
