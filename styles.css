@@ -132,6 +132,7 @@ h2 {
   gap: 1.5rem;
   margin-top: 1rem;
   justify-content: center;
+  align-items: center;
 }
 
 .btn {
@@ -176,6 +177,7 @@ ul {
   .links .btn {
     width: min(92vw, 360px);
     padding: 0.9em 1rem;
+    margin: 0 auto; /* center when stacked */
   }
   .logo {
     max-width: 80vw;
