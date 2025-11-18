@@ -13,6 +13,8 @@ body {
   padding-top: constant(safe-area-inset-top);
 }
 
+/* DEBUG outline removed — CSS debug was completed. */
+
 .star-canvas {
   position: fixed;
   top: 0;
