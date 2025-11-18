@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Store Coming Soon!</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="star-canvas" class="star-canvas"></canvas>
+  <main>
+
+  </main>
+<script>
+// Draw random stars on the canvas background
+function drawStars() {
+  const canvas = document.getElementById('star-canvas');
+  canvas.style.position = 'fixed';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.width = '100vw';
+  canvas.style.height = '100vh';
+  canvas.style.zIndex = '-1';
+  canvas.style.pointerEvents = 'none';
+  const ctx = canvas.getContext('2d');
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  canvas.width = w;
+  canvas.height = h;
+  ctx.clearRect(0, 0, w, h);
+  const numStars = Math.floor((w * h) / 1800); // density
+  for (let i = 0; i < numStars; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    const r = Math.random() * 1.2 + 0.3;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = 'white';
+    ctx.globalAlpha = Math.random() * 0.5 + 0.5;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+window.addEventListener('resize', drawStars);
+window.addEventListener('DOMContentLoaded', drawStars);
+</script>
+</body>
+</html>
