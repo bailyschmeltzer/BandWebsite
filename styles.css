@@ -111,7 +111,7 @@ h2 {
   color: #ff1744;
   margin-bottom: 0.5rem;
   font-family: 'Orbitron', 'Segoe UI', 'Arial', sans-serif;
-  font-size: 2.5rem;
+  /* font-size is controlled by the earlier responsive rule using clamp() */
   letter-spacing: 0.08em;
   text-shadow:
     0 0 8px #fff,
