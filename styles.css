@@ -1,8 +1,12 @@
+html, body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Orbitron', 'Segoe UI', 'Arial', sans-serif;
   color: #fff;
-  min-height: 100vh;
+  min-height: 100%;
   background: #0a0114;
   display: flex;
   align-items: center;
@@ -11,6 +15,8 @@ body {
   /* iOS notch / safe area support */
   padding-top: env(safe-area-inset-top, 0);
   padding-top: constant(safe-area-inset-top);
+  /* leave room at bottom for mobile UI / home indicator */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
 }
 
 /* DEBUG outline removed — CSS debug was completed. */
@@ -46,6 +52,7 @@ main {
   width: 100%;
   padding: 2rem;
   margin: 0;
+  margin-bottom: 2rem; /* ensure spacing from viewport bottom */
   text-align: center;
   /* No border-radius, no z-index, no background, no box-shadow for seamless background */
   box-shadow: none;
