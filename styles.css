@@ -9,7 +9,8 @@ body {
   min-height: 100%;
   background: #0a0114;
   display: flex;
-  align-items: center;
+  /* ensure page content starts at the top so the logo isn't cut off when content grows */
+  align-items: flex-start;
   justify-content: center;
   overflow: auto;
   /* iOS notch / safe area support */
@@ -51,8 +52,8 @@ main {
   max-width: 700px;
   width: 100%;
   padding: 2rem;
-  margin: 0;
-  margin-bottom: 2rem; /* ensure spacing from viewport bottom */
+  /* put some breathing room at the top so the logo isn't flush to the viewport */
+  margin: 2rem auto 2rem;
   text-align: center;
   /* No border-radius, no z-index, no background, no box-shadow for seamless background */
   box-shadow: none;
