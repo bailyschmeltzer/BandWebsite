@@ -5,6 +5,3 @@ pages_build_output_dir = "."
 [[kv_namespaces]]
 binding = "NEON_KV"
 id = "8da4c342175243c59c28048dfba0634b"
-
-[vars]
-ADMIN_SECRET = "Tr4ckstar"
