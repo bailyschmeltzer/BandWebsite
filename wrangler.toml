@@ -2,6 +2,10 @@ name = "neon-oblivion"
 compatibility_date = "2024-09-01"
 pages_build_output_dir = "."
 
+# 1. Environment Variables (Your Admin Secret)
+[vars]
+ADMIN_SECRET = "Tr4ckstar"
+
 [[kv_namespaces]]
 binding = "NEON_KV"
 id = "8da4c342175243c59c28048dfba0634b"
