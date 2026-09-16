@@ -40,7 +40,7 @@
     <section id="events" class="content-section">
       <div class="section-header">
         <h2>Upcoming Events</h2>
-        <button id="admin-add-event-btn" class="admin-btn hidden">+ Add Event</button>
+        <button id="admin-add-event-btn" class="admin-btn hidden" type="button">+ Add Event</button>
       </div>
       <div id="events-list" class="cards-grid">
         <p class="empty-state">Loading tour dates...</p>
@@ -51,7 +51,7 @@
     <section id="news" class="content-section">
       <div class="section-header">
         <h2>Transmissions & News</h2>
-        <button id="admin-add-news-btn" class="admin-btn hidden">+ New Post</button>
+        <button id="admin-add-news-btn" class="admin-btn hidden" type="button">+ New Post</button>
       </div>
       <div id="news-list" class="news-feed">
         <p class="empty-state">Loading transmissions...</p>
@@ -63,7 +63,7 @@
       <h2>Listen & Watch</h2>
       <div class="links">
         <a class="btn" href="https://open.spotify.com/artist/5imqjuli8AgKmmpkEpDi43?si=NIEGDt8WRdyAWUL4VkTgNA" target="_blank" rel="noopener">Spotify</a>
-        <a class="btn" href="http://www.youtube.com/@NeonOblivionMusic" target="_blank" rel="noopener">YouTube</a>
+        <a class="btn" href="https://www.youtube.com/@NeonOblivionMusic" target="_blank" rel="noopener">YouTube</a>
       </div>
     </section>
 
@@ -157,176 +157,187 @@
 
   <script>
     (function () {
-      let adminToken = sessionStorage.getItem('neon_admin_token') || null;
+      var adminToken = sessionStorage.getItem("neon_admin_token") || null;
 
       function openModal(id) {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('hidden');
+        var el = document.getElementById(id);
+        if (el) el.classList.remove("hidden");
       }
 
       function closeModal(id) {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
+        var el = document.getElementById(id);
+        if (el) el.classList.add("hidden");
       }
 
       function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-          .replace(/&/g, '&')
-          .replace(/</g, '<')
-          .replace(/>/g, '>')
-          .replace(/"/g, '"')
-          .replace(/'/g, ''');
+        if (!str) return "";
+        var d = document.createElement("div");
+        d.textContent = str;
+        return d.innerHTML;
       }
 
       async function loadEvents() {
-        const container = document.getElementById('events-list');
+        var container = document.getElementById("events-list");
         try {
-          const res = await fetch('/api/events');
-          if (!res.ok) throw new Error('API error');
-          const events = await res.json();
+          var res = await fetch("/api/events");
+          if (!res.ok) throw new Error("API error");
+          var events = await res.json();
           if (!events || events.length === 0) {
             container.innerHTML = '<p class="empty-state">No upcoming dates announced yet. Check back soon!</p>';
             return;
           }
-          container.innerHTML = events.map(ev => `
-            <div class="event-card">
-              <div class="event-date-badge">${escapeHtml(ev.date)}</div>
-              <div class="event-details">
-                <h4 class="event-venue">${escapeHtml(ev.venue)}</h4>
-                <span class="event-loc">${escapeHtml(ev.location)}</span>
-              </div>
-              <div class="event-action">
-                ${ev.link && ev.link !== '#' ? `<a href="${escapeHtml(ev.link)}" target="_blank" rel="noopener" class="btn-small">Tickets / Info</a>` : `<span class="tba-badge">Details TBA</span>`}
-                ${adminToken ? `<button type="button" class="delete-btn" data-del-event="${escapeHtml(ev.id)}" title="Delete">✕</button>` : ''}
-              </div>
-            </div>
-          `).join('');
+          container.innerHTML = events.map(function(ev) {
+            var hasLink = ev.link && ev.link !== "#";
+            var linkHtml = hasLink 
+              ? '<a href="' + escapeHtml(ev.link) + '" target="_blank" rel="noopener" class="btn-small">Tickets / Info</a>' 
+              : '<span class="tba-badge">Details TBA</span>';
+            var delBtnHtml = adminToken 
+              ? '<button type="button" class="delete-btn" data-del-event="' + escapeHtml(ev.id) + '" title="Delete">✕</button>' 
+              : '';
+
+            return (
+              '<div class="event-card">' +
+                '<div class="event-date-badge">' + escapeHtml(ev.date) + '</div>' +
+                '<div class="event-details">' +
+                  '<h4 class="event-venue">' + escapeHtml(ev.venue) + '</h4>' +
+                  '<span class="event-loc">' + escapeHtml(ev.location) + '</span>' +
+                '</div>' +
+                '<div class="event-action">' +
+                  linkHtml +
+                  delBtnHtml +
+                '</div>' +
+              '</div>'
+            );
+          }).join("");
         } catch (err) {
           container.innerHTML = '<p class="empty-state">No upcoming dates announced yet. Check back soon!</p>';
         }
       }
 
       async function loadNews() {
-        const container = document.getElementById('news-list');
+        var container = document.getElementById("news-list");
         try {
-          const res = await fetch('/api/news');
-          if (!res.ok) throw new Error('API error');
-          const news = await res.json();
+          var res = await fetch("/api/news");
+          if (!res.ok) throw new Error("API error");
+          var news = await res.json();
           if (!news || news.length === 0) {
             container.innerHTML = '<p class="empty-state">No transmissions yet.</p>';
             return;
           }
-          container.innerHTML = news.map(post => `
-            <article class="news-card">
-              <header class="news-header">
-                <div>
-                  <span class="news-date">${escapeHtml(post.date || '')}</span>
-                  <h3 class="news-title">${escapeHtml(post.title)}</h3>
-                </div>
-                ${adminToken ? `<button type="button" class="delete-btn" data-del-news="${escapeHtml(post.id)}" title="Delete">✕</button>` : ''}
-              </header>
-              <div class="news-content">
-                <p>${escapeHtml(post.body).replace(/\n/g, '<br>')}</p>
-              </div>
-            </article>
-          `).join('');
+          container.innerHTML = news.map(function(post) {
+            var delBtnHtml = adminToken 
+              ? '<button type="button" class="delete-btn" data-del-news="' + escapeHtml(post.id) + '" title="Delete">✕</button>' 
+              : '';
+            var formattedBody = escapeHtml(post.body).replace(/\n/g, "<br>");
+
+            return (
+              '<article class="news-card">' +
+                '<header class="news-header">' +
+                  '<div>' +
+                    '<span class="news-date">' + escapeHtml(post.date || "") + '</span>' +
+                    '<h3 class="news-title">' + escapeHtml(post.title) + '</h3>' +
+                  '</div>' +
+                  delBtnHtml +
+                '</header>' +
+                '<div class="news-content">' +
+                  '<p>' + formattedBody + '</p>' +
+                '</div>' +
+              '</article>'
+            );
+          }).join("");
         } catch (err) {
           container.innerHTML = '<p class="empty-state">No transmissions yet.</p>';
         }
       }
 
       function updateAdminUI() {
-        const addEventBtn = document.getElementById('admin-add-event-btn');
-        const addNewsBtn = document.getElementById('admin-add-news-btn');
-        const toggleBtn = document.getElementById('admin-toggle-btn');
+        var addEventBtn = document.getElementById("admin-add-event-btn");
+        var addNewsBtn = document.getElementById("admin-add-news-btn");
+        var toggleBtn = document.getElementById("admin-toggle-btn");
 
         if (adminToken) {
-          addEventBtn.classList.remove('hidden');
-          addNewsBtn.classList.remove('hidden');
-          toggleBtn.textContent = '🔓 Log Out Admin';
-          toggleBtn.classList.add('active');
+          addEventBtn.classList.remove("hidden");
+          addNewsBtn.classList.remove("hidden");
+          toggleBtn.textContent = "🔓 Log Out Admin";
+          toggleBtn.classList.add("active");
         } else {
-          addEventBtn.classList.add('hidden');
-          addNewsBtn.classList.add('hidden');
-          toggleBtn.textContent = '⚡ Admin Access';
-          toggleBtn.classList.remove('active');
+          addEventBtn.classList.add("hidden");
+          addNewsBtn.classList.add("hidden");
+          toggleBtn.textContent = "⚡ Admin Access";
+          toggleBtn.classList.remove("active");
         }
         loadEvents();
         loadNews();
       }
 
-      // Event Listeners setup
-      document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('year').textContent = new Date().getFullYear();
+      document.addEventListener("DOMContentLoaded", function() {
+        var yearEl = document.getElementById("year");
+        if (yearEl) yearEl.textContent = new Date().getFullYear();
         updateAdminUI();
 
         // Admin Toggle Button
-        document.getElementById('admin-toggle-btn').addEventListener('click', () => {
+        document.getElementById("admin-toggle-btn").addEventListener("click", function() {
           if (adminToken) {
             if (confirm("Log out of Admin Mode?")) {
               adminToken = null;
-              sessionStorage.removeItem('neon_admin_token');
+              sessionStorage.removeItem("neon_admin_token");
               updateAdminUI();
             }
           } else {
-            document.getElementById('login-error').classList.add('hidden');
-            document.getElementById('admin-password-input').value = '';
-            openModal('login-modal');
+            document.getElementById("login-error").classList.add("hidden");
+            document.getElementById("admin-password-input").value = "";
+            openModal("login-modal");
           }
         });
 
         // Admin Login Form
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        document.getElementById("login-form").addEventListener("submit", function(e) {
           e.preventDefault();
-          const pass = document.getElementById('admin-password-input').value.trim();
-          
-          // Test token against API
-          const testRes = await fetch('/api/events', {
-            headers: { 'Authorization': `Bearer ${pass}` }
-          });
-
-          // Even a GET is public, but let's save and verify token on post/delete
+          var pass = document.getElementById("admin-password-input").value.trim();
           adminToken = pass;
-          sessionStorage.setItem('neon_admin_token', pass);
-          closeModal('login-modal');
+          sessionStorage.setItem("neon_admin_token", pass);
+          closeModal("login-modal");
           updateAdminUI();
         });
 
         // Add Event & News modal openers
-        document.getElementById('admin-add-event-btn').addEventListener('click', () => openModal('event-modal'));
-        document.getElementById('admin-add-news-btn').addEventListener('click', () => openModal('news-modal'));
+        document.getElementById("admin-add-event-btn").addEventListener("click", function() {
+          openModal("event-modal");
+        });
+        document.getElementById("admin-add-news-btn").addEventListener("click", function() {
+          openModal("news-modal");
+        });
 
         // Modal Cancel Buttons
-        document.querySelectorAll('.modal-cancel-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const modalId = btn.getAttribute('data-modal');
+        document.querySelectorAll(".modal-cancel-btn").forEach(function(btn) {
+          btn.addEventListener("click", function() {
+            var modalId = btn.getAttribute("data-modal");
             closeModal(modalId);
           });
         });
 
         // Save Event
-        document.getElementById('event-form').addEventListener('submit', async (e) => {
+        document.getElementById("event-form").addEventListener("submit", async function(e) {
           e.preventDefault();
-          const payload = {
-            date: document.getElementById('ev-date').value.trim(),
-            venue: document.getElementById('ev-venue').value.trim(),
-            location: document.getElementById('ev-location').value.trim(),
-            link: document.getElementById('ev-link').value.trim() || '#'
+          var payload = {
+            date: document.getElementById("ev-date").value.trim(),
+            venue: document.getElementById("ev-venue").value.trim(),
+            location: document.getElementById("ev-location").value.trim(),
+            link: document.getElementById("ev-link").value.trim() || "#"
           };
 
-          const res = await fetch('/api/events', {
-            method: 'POST',
+          var res = await fetch("/api/events", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${adminToken}`
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + adminToken
             },
             body: JSON.stringify(payload)
           });
 
           if (res.ok) {
-            closeModal('event-modal');
-            document.getElementById('event-form').reset();
+            closeModal("event-modal");
+            document.getElementById("event-form").reset();
             loadEvents();
           } else {
             alert("Failed to save event. Password incorrect or server error.");
@@ -334,66 +345,67 @@
         });
 
         // Save News
-        document.getElementById('news-form').addEventListener('submit', async (e) => {
+        document.getElementById("news-form").addEventListener("submit", async function(e) {
           e.preventDefault();
-          const now = new Date();
-          const defaultDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-          const payload = {
-            title: document.getElementById('post-title').value.trim(),
-            date: document.getElementById('post-date').value.trim() || defaultDate,
-            body: document.getElementById('post-body').value.trim()
+          var now = new Date();
+          var defaultDate = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+          var payload = {
+            title: document.getElementById("post-title").value.trim(),
+            date: document.getElementById("post-date").value.trim() || defaultDate,
+            body: document.getElementById("post-body").value.trim()
           };
 
-          const res = await fetch('/api/news', {
-            method: 'POST',
+          var res = await fetch("/api/news", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${adminToken}`
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + adminToken
             },
             body: JSON.stringify(payload)
           });
 
           if (res.ok) {
-            closeModal('news-modal');
-            document.getElementById('news-form').reset();
+            closeModal("news-modal");
+            document.getElementById("news-form").reset();
             loadNews();
           } else {
             alert("Failed to publish post. Password incorrect or server error.");
           }
         });
 
-        // Delegated Delete Handlers
-        document.getElementById('events-list').addEventListener('click', async (e) => {
-          const target = e.target.closest('[data-del-event]');
+        // Delete Event
+        document.getElementById("events-list").addEventListener("click", async function(e) {
+          var target = e.target.closest("[data-del-event]");
           if (!target) return;
-          const id = target.getAttribute('data-del-event');
+          var id = target.getAttribute("data-del-event");
           if (!confirm("Are you sure you want to delete this event?")) return;
 
-          const res = await fetch('/api/events', {
-            method: 'DELETE',
+          var res = await fetch("/api/events", {
+            method: "DELETE",
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${adminToken}`
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + adminToken
             },
-            body: JSON.stringify({ id })
+            body: JSON.stringify({ id: id })
           });
           if (res.ok) loadEvents();
           else alert("Failed to delete event.");
         });
 
-        document.getElementById('news-list').addEventListener('click', async (e) => {
-          const target = e.target.closest('[data-del-news]');
+        // Delete News
+        document.getElementById("news-list").addEventListener("click", async function(e) {
+          var target = e.target.closest("[data-del-news]");
           if (!target) return;
-          const id = target.getAttribute('data-del-news');
+          var id = target.getAttribute("data-del-news");
           if (!confirm("Are you sure you want to delete this transmission?")) return;
 
-          const res = await fetch('/api/news', {
-            method: 'DELETE',
+          var res = await fetch("/api/news", {
+            method: "DELETE",
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${adminToken}`
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + adminToken
             },
-            body: JSON.stringify({ id })
+            body: JSON.stringify({ id: id })
           });
           if (res.ok) loadNews();
           else alert("Failed to delete post.");
@@ -402,37 +414,37 @@
 
       // Background Starfield
       function drawStars() {
-        const canvas = document.getElementById('star-canvas');
+        var canvas = document.getElementById("star-canvas");
         if (!canvas) return;
-        canvas.style.position = 'fixed';
-        canvas.style.top = '0';
-        canvas.style.left = '0';
-        canvas.style.width = '100vw';
-        canvas.style.height = '100vh';
-        canvas.style.zIndex = '-1';
-        canvas.style.pointerEvents = 'none';
-        const ctx = canvas.getContext('2d');
-        const w = window.innerWidth;
-        const h = window.innerHeight;
+        canvas.style.position = "fixed";
+        canvas.style.top = "0";
+        canvas.style.left = "0";
+        canvas.style.width = "100vw";
+        canvas.style.height = "100vh";
+        canvas.style.zIndex = "-1";
+        canvas.style.pointerEvents = "none";
+        var ctx = canvas.getContext("2d");
+        var w = window.innerWidth;
+        var h = window.innerHeight;
         canvas.width = w;
         canvas.height = h;
         ctx.clearRect(0, 0, w, h);
-        const numStars = Math.floor((w * h) / 1800);
-        for (let i = 0; i < numStars; i++) {
-          const x = Math.random() * w;
-          const y = Math.random() * h;
-          const r = Math.random() * 1.2 + 0.3;
+        var numStars = Math.floor((w * h) / 1800);
+        for (var i = 0; i < numStars; i++) {
+          var x = Math.random() * w;
+          var y = Math.random() * h;
+          var r = Math.random() * 1.2 + 0.3;
           ctx.beginPath();
           ctx.arc(x, y, r, 0, 2 * Math.PI);
-          ctx.fillStyle = 'white';
+          ctx.fillStyle = "white";
           ctx.globalAlpha = Math.random() * 0.5 + 0.5;
           ctx.fill();
           ctx.globalAlpha = 1;
         }
       }
 
-      window.addEventListener('resize', drawStars);
-      window.addEventListener('DOMContentLoaded', drawStars);
+      window.addEventListener("resize", drawStars);
+      window.addEventListener("DOMContentLoaded", drawStars);
     })();
   </script>
 </body>
