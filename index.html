@@ -13,7 +13,7 @@
 <body>
   <canvas id="star-canvas" class="star-canvas"></canvas>
 
-  <!-- Sticky Cyber Navigation -->
+  <!-- Sticky Navigation -->
   <header class="main-header">
     <nav class="nav-bar">
       <a href="#about">About</a>
@@ -40,7 +40,7 @@
     <section id="events" class="content-section">
       <div class="section-header">
         <h2>Upcoming Events</h2>
-        <button id="admin-add-event-btn" class="admin-btn hidden" onclick="openModal('event-modal')">+ Add Event</button>
+        <button id="admin-add-event-btn" class="admin-btn hidden">+ Add Event</button>
       </div>
       <div id="events-list" class="cards-grid">
         <p class="empty-state">Loading tour dates...</p>
@@ -51,7 +51,7 @@
     <section id="news" class="content-section">
       <div class="section-header">
         <h2>Transmissions & News</h2>
-        <button id="admin-add-news-btn" class="admin-btn hidden" onclick="openModal('news-modal')">+ New Post</button>
+        <button id="admin-add-news-btn" class="admin-btn hidden">+ New Post</button>
       </div>
       <div id="news-list" class="news-feed">
         <p class="empty-state">Loading transmissions...</p>
@@ -87,17 +87,34 @@
     <!-- Footer -->
     <footer>
       <p class="copyright">© <span id="year"></span> Neon Oblivion. All rights reserved.</p>
-      <button id="admin-toggle-btn" class="admin-login-link" onclick="handleAdminToggle()">⚡ Admin Access</button>
+      <button id="admin-toggle-btn" class="admin-login-link" type="button">⚡ Admin Access</button>
     </footer>
   </main>
+
+  <!-- Modal: Admin Login -->
+  <div id="login-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>⚡ Admin Login</h3>
+      <form id="login-form">
+        <label>Admin Password
+          <input type="password" id="admin-password-input" placeholder="Enter password..." required autocomplete="current-password">
+        </label>
+        <p id="login-error" class="error-msg hidden">Incorrect password. Please try again.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary modal-cancel-btn" data-modal="login-modal">Cancel</button>
+          <button type="submit" class="btn">Unlock</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Modal: Add Event -->
   <div id="event-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <h3>Add Upcoming Event</h3>
-      <form id="event-form" onsubmit="saveEvent(event)">
+      <form id="event-form">
         <label>Date & Time
-          <input type="text" id="ev-date" placeholder="e.g. OCT 24, 2026 - 8:00 PM" required>
+          <input type="text" id="ev-date" placeholder="e.g. NOV 14, 2026 - 8:00 PM" required>
         </label>
         <label>Venue Name
           <input type="text" id="ev-venue" placeholder="e.g. The Electric Comet" required>
@@ -109,7 +126,7 @@
           <input type="url" id="ev-link" placeholder="https://...">
         </label>
         <div class="modal-actions">
-          <button type="button" class="btn-secondary" onclick="closeModal('event-modal')">Cancel</button>
+          <button type="button" class="btn-secondary modal-cancel-btn" data-modal="event-modal">Cancel</button>
           <button type="submit" class="btn">Save Event</button>
         </div>
       </form>
@@ -120,7 +137,7 @@
   <div id="news-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <h3>Post News Transmission</h3>
-      <form id="news-form" onsubmit="saveNews(event)">
+      <form id="news-form">
         <label>Transmission Title
           <input type="text" id="post-title" placeholder="e.g. New Single Dropping Friday" required>
         </label>
@@ -131,7 +148,7 @@
           <textarea id="post-body" rows="5" placeholder="Write your transmission here..." required></textarea>
         </label>
         <div class="modal-actions">
-          <button type="button" class="btn-secondary" onclick="closeModal('news-modal')">Cancel</button>
+          <button type="button" class="btn-secondary modal-cancel-btn" data-modal="news-modal">Cancel</button>
           <button type="submit" class="btn">Publish Post</button>
         </div>
       </form>
@@ -139,225 +156,284 @@
   </div>
 
   <script>
-    let adminToken = sessionStorage.getItem('neon_admin_token') || null;
+    (function () {
+      let adminToken = sessionStorage.getItem('neon_admin_token') || null;
 
-    async function loadEvents() {
-      const container = document.getElementById('events-list');
-      try {
-        const res = await fetch('/api/events');
-        const events = await res.json();
-        if (!events || events.length === 0) {
-          container.innerHTML = `<p class="empty-state">No upcoming dates announced yet. Check back soon!</p>`;
-          return;
-        }
-        container.innerHTML = events.map(ev => `
-          <div class="event-card">
-            <div class="event-date-badge">${escapeHtml(ev.date)}</div>
-            <div class="event-details">
-              <h4 class="event-venue">${escapeHtml(ev.venue)}</h4>
-              <span class="event-loc">${escapeHtml(ev.location)}</span>
-            </div>
-            <div class="event-action">
-              ${ev.link && ev.link !== '#' ? `<a href="${escapeHtml(ev.link)}" target="_blank" rel="noopener" class="btn-small">Tickets / Info</a>` : `<span class="tba-badge">Details TBA</span>`}
-              ${adminToken ? `<button class="delete-btn" onclick="deleteEvent('${ev.id}')" title="Delete">✕</button>` : ''}
-            </div>
-          </div>
-        `).join('');
-      } catch (err) {
-        container.innerHTML = `<p class="empty-state">Unable to load tour dates.</p>`;
+      function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('hidden');
       }
-    }
 
-    async function loadNews() {
-      const container = document.getElementById('news-list');
-      try {
-        const res = await fetch('/api/news');
-        const news = await res.json();
-        if (!news || news.length === 0) {
-          container.innerHTML = `<p class="empty-state">No transmissions yet.</p>`;
-          return;
-        }
-        container.innerHTML = news.map(post => `
-          <article class="news-card">
-            <header class="news-header">
-              <div>
-                <span class="news-date">${escapeHtml(post.date || '')}</span>
-                <h3 class="news-title">${escapeHtml(post.title)}</h3>
+      function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&')
+          .replace(/</g, '<')
+          .replace(/>/g, '>')
+          .replace(/"/g, '"')
+          .replace(/'/g, ''');
+      }
+
+      async function loadEvents() {
+        const container = document.getElementById('events-list');
+        try {
+          const res = await fetch('/api/events');
+          if (!res.ok) throw new Error('API error');
+          const events = await res.json();
+          if (!events || events.length === 0) {
+            container.innerHTML = '<p class="empty-state">No upcoming dates announced yet. Check back soon!</p>';
+            return;
+          }
+          container.innerHTML = events.map(ev => `
+            <div class="event-card">
+              <div class="event-date-badge">${escapeHtml(ev.date)}</div>
+              <div class="event-details">
+                <h4 class="event-venue">${escapeHtml(ev.venue)}</h4>
+                <span class="event-loc">${escapeHtml(ev.location)}</span>
               </div>
-              ${adminToken ? `<button class="delete-btn" onclick="deleteNews('${post.id}')" title="Delete">✕</button>` : ''}
-            </header>
-            <div class="news-content">
-              <p>${escapeHtml(post.body).replace(/\n/g, '<br>')}</p>
+              <div class="event-action">
+                ${ev.link && ev.link !== '#' ? `<a href="${escapeHtml(ev.link)}" target="_blank" rel="noopener" class="btn-small">Tickets / Info</a>` : `<span class="tba-badge">Details TBA</span>`}
+                ${adminToken ? `<button type="button" class="delete-btn" data-del-event="${escapeHtml(ev.id)}" title="Delete">✕</button>` : ''}
+              </div>
             </div>
-          </article>
-        `).join('');
-      } catch (err) {
-        container.innerHTML = `<p class="empty-state">Unable to load transmissions.</p>`;
-      }
-    }
-
-    function updateAdminUI() {
-      const addEventBtn = document.getElementById('admin-add-event-btn');
-      const addNewsBtn = document.getElementById('admin-add-news-btn');
-      const toggleBtn = document.getElementById('admin-toggle-btn');
-
-      if (adminToken) {
-        addEventBtn.classList.remove('hidden');
-        addNewsBtn.classList.remove('hidden');
-        toggleBtn.textContent = '🔓 Log Out Admin';
-        toggleBtn.classList.add('active');
-      } else {
-        addEventBtn.classList.add('hidden');
-        addNewsBtn.classList.add('hidden');
-        toggleBtn.textContent = '⚡ Admin Access';
-        toggleBtn.classList.remove('active');
-      }
-      loadEvents();
-      loadNews();
-    }
-
-    function handleAdminToggle() {
-      if (adminToken) {
-        if (confirm("Log out of Admin Mode?")) {
-          adminToken = null;
-          sessionStorage.removeItem('neon_admin_token');
-          updateAdminUI();
+          `).join('');
+        } catch (err) {
+          container.innerHTML = '<p class="empty-state">No upcoming dates announced yet. Check back soon!</p>';
         }
-      } else {
-        const pass = prompt("Enter Admin Password:");
-        if (pass) {
+      }
+
+      async function loadNews() {
+        const container = document.getElementById('news-list');
+        try {
+          const res = await fetch('/api/news');
+          if (!res.ok) throw new Error('API error');
+          const news = await res.json();
+          if (!news || news.length === 0) {
+            container.innerHTML = '<p class="empty-state">No transmissions yet.</p>';
+            return;
+          }
+          container.innerHTML = news.map(post => `
+            <article class="news-card">
+              <header class="news-header">
+                <div>
+                  <span class="news-date">${escapeHtml(post.date || '')}</span>
+                  <h3 class="news-title">${escapeHtml(post.title)}</h3>
+                </div>
+                ${adminToken ? `<button type="button" class="delete-btn" data-del-news="${escapeHtml(post.id)}" title="Delete">✕</button>` : ''}
+              </header>
+              <div class="news-content">
+                <p>${escapeHtml(post.body).replace(/\n/g, '<br>')}</p>
+              </div>
+            </article>
+          `).join('');
+        } catch (err) {
+          container.innerHTML = '<p class="empty-state">No transmissions yet.</p>';
+        }
+      }
+
+      function updateAdminUI() {
+        const addEventBtn = document.getElementById('admin-add-event-btn');
+        const addNewsBtn = document.getElementById('admin-add-news-btn');
+        const toggleBtn = document.getElementById('admin-toggle-btn');
+
+        if (adminToken) {
+          addEventBtn.classList.remove('hidden');
+          addNewsBtn.classList.remove('hidden');
+          toggleBtn.textContent = '🔓 Log Out Admin';
+          toggleBtn.classList.add('active');
+        } else {
+          addEventBtn.classList.add('hidden');
+          addNewsBtn.classList.add('hidden');
+          toggleBtn.textContent = '⚡ Admin Access';
+          toggleBtn.classList.remove('active');
+        }
+        loadEvents();
+        loadNews();
+      }
+
+      // Event Listeners setup
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('year').textContent = new Date().getFullYear();
+        updateAdminUI();
+
+        // Admin Toggle Button
+        document.getElementById('admin-toggle-btn').addEventListener('click', () => {
+          if (adminToken) {
+            if (confirm("Log out of Admin Mode?")) {
+              adminToken = null;
+              sessionStorage.removeItem('neon_admin_token');
+              updateAdminUI();
+            }
+          } else {
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('admin-password-input').value = '';
+            openModal('login-modal');
+          }
+        });
+
+        // Admin Login Form
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const pass = document.getElementById('admin-password-input').value.trim();
+          
+          // Test token against API
+          const testRes = await fetch('/api/events', {
+            headers: { 'Authorization': `Bearer ${pass}` }
+          });
+
+          // Even a GET is public, but let's save and verify token on post/delete
           adminToken = pass;
           sessionStorage.setItem('neon_admin_token', pass);
+          closeModal('login-modal');
           updateAdminUI();
+        });
+
+        // Add Event & News modal openers
+        document.getElementById('admin-add-event-btn').addEventListener('click', () => openModal('event-modal'));
+        document.getElementById('admin-add-news-btn').addEventListener('click', () => openModal('news-modal'));
+
+        // Modal Cancel Buttons
+        document.querySelectorAll('.modal-cancel-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const modalId = btn.getAttribute('data-modal');
+            closeModal(modalId);
+          });
+        });
+
+        // Save Event
+        document.getElementById('event-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const payload = {
+            date: document.getElementById('ev-date').value.trim(),
+            venue: document.getElementById('ev-venue').value.trim(),
+            location: document.getElementById('ev-location').value.trim(),
+            link: document.getElementById('ev-link').value.trim() || '#'
+          };
+
+          const res = await fetch('/api/events', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            closeModal('event-modal');
+            document.getElementById('event-form').reset();
+            loadEvents();
+          } else {
+            alert("Failed to save event. Password incorrect or server error.");
+          }
+        });
+
+        // Save News
+        document.getElementById('news-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const now = new Date();
+          const defaultDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const payload = {
+            title: document.getElementById('post-title').value.trim(),
+            date: document.getElementById('post-date').value.trim() || defaultDate,
+            body: document.getElementById('post-body').value.trim()
+          };
+
+          const res = await fetch('/api/news', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            closeModal('news-modal');
+            document.getElementById('news-form').reset();
+            loadNews();
+          } else {
+            alert("Failed to publish post. Password incorrect or server error.");
+          }
+        });
+
+        // Delegated Delete Handlers
+        document.getElementById('events-list').addEventListener('click', async (e) => {
+          const target = e.target.closest('[data-del-event]');
+          if (!target) return;
+          const id = target.getAttribute('data-del-event');
+          if (!confirm("Are you sure you want to delete this event?")) return;
+
+          const res = await fetch('/api/events', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ id })
+          });
+          if (res.ok) loadEvents();
+          else alert("Failed to delete event.");
+        });
+
+        document.getElementById('news-list').addEventListener('click', async (e) => {
+          const target = e.target.closest('[data-del-news]');
+          if (!target) return;
+          const id = target.getAttribute('data-del-news');
+          if (!confirm("Are you sure you want to delete this transmission?")) return;
+
+          const res = await fetch('/api/news', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ id })
+          });
+          if (res.ok) loadNews();
+          else alert("Failed to delete post.");
+        });
+      });
+
+      // Background Starfield
+      function drawStars() {
+        const canvas = document.getElementById('star-canvas');
+        if (!canvas) return;
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+        canvas.style.zIndex = '-1';
+        canvas.style.pointerEvents = 'none';
+        const ctx = canvas.getContext('2d');
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        canvas.width = w;
+        canvas.height = h;
+        ctx.clearRect(0, 0, w, h);
+        const numStars = Math.floor((w * h) / 1800);
+        for (let i = 0; i < numStars; i++) {
+          const x = Math.random() * w;
+          const y = Math.random() * h;
+          const r = Math.random() * 1.2 + 0.3;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, 2 * Math.PI);
+          ctx.fillStyle = 'white';
+          ctx.globalAlpha = Math.random() * 0.5 + 0.5;
+          ctx.fill();
+          ctx.globalAlpha = 1;
         }
       }
-    }
 
-    async function saveEvent(e) {
-      e.preventDefault();
-      const payload = {
-        date: document.getElementById('ev-date').value.trim(),
-        venue: document.getElementById('ev-venue').value.trim(),
-        location: document.getElementById('ev-location').value.trim(),
-        link: document.getElementById('ev-link').value.trim() || '#'
-      };
-
-      const res = await fetch('/api/events', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        closeModal('event-modal');
-        document.getElementById('event-form').reset();
-        loadEvents();
-      } else {
-        alert("Failed to save event. Please verify your admin password.");
-      }
-    }
-
-    async function deleteEvent(id) {
-      if (!confirm("Are you sure you want to delete this event?")) return;
-      const res = await fetch('/api/events', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        },
-        body: JSON.stringify({ id })
-      });
-      if (res.ok) loadEvents();
-      else alert("Failed to delete event.");
-    }
-
-    async function saveNews(e) {
-      e.preventDefault();
-      const now = new Date();
-      const defaultDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      const payload = {
-        title: document.getElementById('post-title').value.trim(),
-        date: document.getElementById('post-date').value.trim() || defaultDate,
-        body: document.getElementById('post-body').value.trim()
-      };
-
-      const res = await fetch('/api/news', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        closeModal('news-modal');
-        document.getElementById('news-form').reset();
-        loadNews();
-      } else {
-        alert("Failed to publish post. Please verify your admin password.");
-      }
-    }
-
-    async function deleteNews(id) {
-      if (!confirm("Are you sure you want to delete this post?")) return;
-      const res = await fetch('/api/news', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`
-        },
-        body: JSON.stringify({ id })
-      });
-      if (res.ok) loadNews();
-      else alert("Failed to delete post.");
-    }
-
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, ''');
-    }
-
-    function drawStars() {
-      const canvas = document.getElementById('star-canvas');
-      canvas.style.position = 'fixed';
-      canvas.style.top = '0';
-      canvas.style.left = '0';
-      canvas.style.width = '100vw';
-      canvas.style.height = '100vh';
-      canvas.style.zIndex = '-1';
-      canvas.style.pointerEvents = 'none';
-      const ctx = canvas.getContext('2d');
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      canvas.width = w;
-      canvas.height = h;
-      ctx.clearRect(0, 0, w, h);
-      const numStars = Math.floor((w * h) / 1800);
-      for (let i = 0; i < numStars; i++) {
-        const x = Math.random() * w;
-        const y = Math.random() * h;
-        const r = Math.random() * 1.2 + 0.3;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, 2 * Math.PI);
-        ctx.fillStyle = 'white';
-        ctx.globalAlpha = Math.random() * 0.5 + 0.5;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-    }
-
-    window.addEventListener('resize', drawStars);
-    window.addEventListener('DOMContentLoaded', () => {
-      drawStars();
-      document.getElementById('year').textContent = new Date().getFullYear();
-      updateAdminUI();
-    });
+      window.addEventListener('resize', drawStars);
+      window.addEventListener('DOMContentLoaded', drawStars);
+    })();
   </script>
 </body>
 </html>
