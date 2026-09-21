@@ -33,7 +33,7 @@
     <section id="about">
       <h2>About Us</h2>
       <p>
-        Neon Oblivion fuses crushing guitar riffs and driving rhythms with sharp, melodic precision. Drawing inspiration from classic heavy metal and modern alternative anthems, the band crafts high-energy originals and hard-hitting reimagined tracks built for the stage. Loud, dynamic, and relentless, Neon Oblivion delivers music with raw weight and unmistakable atmosphere.
+        Macey says "We are cool and awesome!"
       </p>
     </section>
 
@@ -316,15 +316,6 @@
             '</div>' 
           : '';
 
-        var thumbsHtml = cachedGallery.map(function(photo, idx) {
-          var isActive = idx === activeGalleryIndex ? ' active' : '';
-          return (
-            '<div class="thumb-card' + isActive + '" data-thumb-index="' + idx + '">' +
-              '<img src="' + escapeHtml(photo.url) + '" alt="Thumbnail ' + (idx + 1) + '">' +
-            '</div>'
-          );
-        }).join("");
-
         container.innerHTML = 
           '<div class="showcase-main-card">' +
             '<div class="showcase-stage">' +
@@ -339,15 +330,7 @@
               '</div>' +
               adminControls +
             '</div>' +
-          '</div>' +
-          '<div class="showcase-thumbs-reel" id="thumbs-reel">' +
-            thumbsHtml +
           '</div>';
-
-        var activeThumb = container.querySelector(".thumb-card.active");
-        if (activeThumb) {
-          activeThumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-        }
       }
 
       async function loadGallery() {
@@ -588,14 +571,6 @@
             // Next button
             if (e.target.closest("#gallery-next-btn")) {
               activeGalleryIndex++;
-              renderGalleryShowcase();
-              return;
-            }
-
-            // Thumbnail click
-            var thumb = e.target.closest("[data-thumb-index]");
-            if (thumb) {
-              activeGalleryIndex = parseInt(thumb.getAttribute("data-thumb-index"), 10);
               renderGalleryShowcase();
               return;
             }
