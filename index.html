@@ -19,6 +19,7 @@
       <a href="#about">About</a>
       <a href="#events">Tour</a>
       <a href="#news">News</a>
+      <a href="#gallery">Gallery</a>
       <a href="#links">Listen</a>
       <a href="#store">Store</a>
       <a href="#socials">Socials</a>
@@ -32,7 +33,7 @@
     <section id="about">
       <h2>About Us</h2>
       <p>
-        Macey says "We are super cool and awesome!"
+        Macey says we are cool and awesome
       </p>
     </section>
 
@@ -55,6 +56,17 @@
       </div>
       <div id="news-list" class="news-feed">
         <p class="empty-state">No new updates...</p>
+      </div>
+    </section>
+
+    <!-- Photo Gallery Section -->
+    <section id="gallery" class="content-section">
+      <div class="section-header">
+        <h2>Visual Transmissions</h2>
+        <button id="admin-add-gallery-btn" class="admin-btn hidden" type="button">+ Add Photo</button>
+      </div>
+      <div id="gallery-list" class="gallery-grid">
+        <p class="empty-state">No photos in the archives yet.</p>
       </div>
     </section>
 
@@ -157,11 +169,41 @@
     </div>
   </div>
 
+  <!-- Modal: Add / Edit Photo -->
+  <div id="gallery-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3 id="gallery-modal-title">Add Photo to Gallery</h3>
+      <form id="gallery-form">
+        <input type="hidden" id="photo-id">
+        <label>Imgur Photo URL
+          <input type="url" id="photo-url" placeholder="https://imgur.com/... or https://i.imgur.com/....png" required>
+        </label>
+        <label>Caption / Title (Optional)
+          <input type="text" id="photo-caption" placeholder="e.g. Live at The Electric Comet">
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary modal-cancel-btn" data-modal="gallery-modal">Cancel</button>
+          <button type="submit" class="btn">Save Photo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Fullscreen Lightbox -->
+  <div id="lightbox" class="lightbox-overlay hidden">
+    <button id="lightbox-close" class="lightbox-close" type="button" aria-label="Close Lightbox">×</button>
+    <div class="lightbox-content">
+      <img id="lightbox-img" class="lightbox-img" src="" alt="Fullscreen view">
+      <p id="lightbox-caption" class="lightbox-caption"></p>
+    </div>
+  </div>
+
   <script>
     (function () {
       var adminToken = sessionStorage.getItem("neon_admin_token") || null;
       var cachedEvents = [];
       var cachedNews = [];
+      var cachedGallery = [];
 
       function openModal(id) {
         var el = document.getElementById(id);
@@ -188,7 +230,7 @@
           var events = await res.json();
           cachedEvents = Array.isArray(events) ? events : [];
           if (cachedEvents.length === 0) {
-            container.innerHTML = '<p class="empty-state">No upcoming dates announced yet. Check back soon!</p>';
+            container.innerHTML = '<p class="empty-state">No upcoming tour dates...</p>';
             return;
           }
           container.innerHTML = cachedEvents.map(function(ev) {
@@ -218,7 +260,7 @@
             );
           }).join("");
         } catch (err) {
-          container.innerHTML = '<p class="empty-state">No upcoming dates announced yet. Check back soon!</p>';
+          container.innerHTML = '<p class="empty-state">No upcoming tour dates...</p>';
         }
       }
 
@@ -230,7 +272,7 @@
           var news = await res.json();
           cachedNews = Array.isArray(news) ? news : [];
           if (cachedNews.length === 0) {
-            container.innerHTML = '<p class="empty-state">No transmissions yet.</p>';
+            container.innerHTML = '<p class="empty-state">No new updates...</p>';
             return;
           }
           container.innerHTML = cachedNews.map(function(post) {
@@ -258,28 +300,68 @@
             );
           }).join("");
         } catch (err) {
-          container.innerHTML = '<p class="empty-state">No transmissions yet.</p>';
+          container.innerHTML = '<p class="empty-state">No new updates...</p>';
+        }
+      }
+
+      async function loadGallery() {
+        var container = document.getElementById("gallery-list");
+        try {
+          var res = await fetch("/api/gallery");
+          if (!res.ok) throw new Error("API error");
+          var photos = await res.json();
+          cachedGallery = Array.isArray(photos) ? photos : [];
+          if (cachedGallery.length === 0) {
+            container.innerHTML = '<p class="empty-state">No photos in the archives yet.</p>';
+            return;
+          }
+          container.innerHTML = cachedGallery.map(function(photo) {
+            var adminControls = adminToken 
+              ? '<div class="admin-card-actions">' +
+                  '<button type="button" class="edit-btn" data-edit-photo="' + escapeHtml(photo.id) + '" title="Edit">✏️</button>' +
+                  '<button type="button" class="delete-btn" data-del-photo="' + escapeHtml(photo.id) + '" title="Delete">✕</button>' +
+                '</div>' 
+              : '';
+
+            return (
+              '<div class="gallery-card">' +
+                '<div class="gallery-img-wrapper" data-lightbox-src="' + escapeHtml(photo.url) + '" data-lightbox-caption="' + escapeHtml(photo.caption || "") + '">' +
+                  '<img src="' + escapeHtml(photo.url) + '" alt="' + escapeHtml(photo.caption || "Neon Oblivion") + '" loading="lazy">' +
+                '</div>' +
+                '<div class="gallery-footer">' +
+                  '<span class="gallery-caption">' + escapeHtml(photo.caption || "Neon Oblivion") + '</span>' +
+                  adminControls +
+                '</div>' +
+              '</div>'
+            );
+          }).join("");
+        } catch (err) {
+          container.innerHTML = '<p class="empty-state">No photos in the archives yet.</p>';
         }
       }
 
       function updateAdminUI() {
         var addEventBtn = document.getElementById("admin-add-event-btn");
         var addNewsBtn = document.getElementById("admin-add-news-btn");
+        var addGalleryBtn = document.getElementById("admin-add-gallery-btn");
         var toggleBtn = document.getElementById("admin-toggle-btn");
 
         if (adminToken) {
           addEventBtn.classList.remove("hidden");
           addNewsBtn.classList.remove("hidden");
+          if (addGalleryBtn) addGalleryBtn.classList.remove("hidden");
           toggleBtn.textContent = "🔓 Log Out Admin";
           toggleBtn.classList.add("active");
         } else {
           addEventBtn.classList.add("hidden");
           addNewsBtn.classList.add("hidden");
+          if (addGalleryBtn) addGalleryBtn.classList.add("hidden");
           toggleBtn.textContent = "⚡ Admin Access";
           toggleBtn.classList.remove("active");
         }
         loadEvents();
         loadNews();
+        loadGallery();
       }
 
       document.addEventListener("DOMContentLoaded", function() {
@@ -344,7 +426,7 @@
           }
         });
 
-        // Add Event opener (Reset Form)
+        // Add Modal Openers
         document.getElementById("admin-add-event-btn").addEventListener("click", function() {
           document.getElementById("event-form").reset();
           document.getElementById("ev-id").value = "";
@@ -352,12 +434,18 @@
           openModal("event-modal");
         });
 
-        // Add News opener (Reset Form)
         document.getElementById("admin-add-news-btn").addEventListener("click", function() {
           document.getElementById("news-form").reset();
           document.getElementById("post-id").value = "";
           document.getElementById("news-modal-title").textContent = "Post News Transmission";
           openModal("news-modal");
+        });
+
+        document.getElementById("admin-add-gallery-btn").addEventListener("click", function() {
+          document.getElementById("gallery-form").reset();
+          document.getElementById("photo-id").value = "";
+          document.getElementById("gallery-modal-title").textContent = "Add Photo to Gallery";
+          openModal("gallery-modal");
         });
 
         // Modal Cancel Buttons
@@ -368,7 +456,7 @@
           });
         });
 
-        // Save Event (POST for new, PUT for edit)
+        // Save Event
         document.getElementById("event-form").addEventListener("submit", async function(e) {
           e.preventDefault();
           var editId = document.getElementById("ev-id").value.trim();
@@ -400,7 +488,7 @@
           }
         });
 
-        // Save News (POST for new, PUT for edit)
+        // Save News
         document.getElementById("news-form").addEventListener("submit", async function(e) {
           e.preventDefault();
           var editId = document.getElementById("post-id").value.trim();
@@ -433,7 +521,37 @@
           }
         });
 
-        // Event List Delegated Actions (Edit & Delete)
+        // Save Photo (Gallery)
+        document.getElementById("gallery-form").addEventListener("submit", async function(e) {
+          e.preventDefault();
+          var editId = document.getElementById("photo-id").value.trim();
+          var isEdit = !!editId;
+
+          var payload = {
+            url: document.getElementById("photo-url").value.trim(),
+            caption: document.getElementById("photo-caption").value.trim()
+          };
+          if (isEdit) payload.id = editId;
+
+          var res = await fetch("/api/gallery", {
+            method: isEdit ? "PUT" : "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + adminToken
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            closeModal("gallery-modal");
+            document.getElementById("gallery-form").reset();
+            loadGallery();
+          } else {
+            alert("Failed to save photo. Password incorrect or server error.");
+          }
+        });
+
+        // Event List Delegated Actions
         document.getElementById("events-list").addEventListener("click", async function(e) {
           var editTarget = e.target.closest("[data-edit-event]");
           if (editTarget) {
@@ -469,7 +587,7 @@
           }
         });
 
-        // News List Delegated Actions (Edit & Delete)
+        // News List Delegated Actions
         document.getElementById("news-list").addEventListener("click", async function(e) {
           var editTarget = e.target.closest("[data-edit-news]");
           if (editTarget) {
@@ -502,6 +620,59 @@
             if (res.ok) loadNews();
             else alert("Failed to delete post.");
           }
+        });
+
+        // Gallery List Delegated Actions (Lightbox, Edit & Delete)
+        document.getElementById("gallery-list").addEventListener("click", async function(e) {
+          var editTarget = e.target.closest("[data-edit-photo]");
+          if (editTarget) {
+            var id = editTarget.getAttribute("data-edit-photo");
+            var item = cachedGallery.find(function(p) { return p.id === id; });
+            if (item) {
+              document.getElementById("photo-id").value = item.id;
+              document.getElementById("photo-url").value = item.url || "";
+              document.getElementById("photo-caption").value = item.caption || "";
+              document.getElementById("gallery-modal-title").textContent = "Edit Photo";
+              openModal("gallery-modal");
+            }
+            return;
+          }
+
+          var delTarget = e.target.closest("[data-del-photo]");
+          if (delTarget) {
+            var delId = delTarget.getAttribute("data-del-photo");
+            if (!confirm("Are you sure you want to delete this photo?")) return;
+
+            var res = await fetch("/api/gallery", {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + adminToken
+              },
+              body: JSON.stringify({ id: delId })
+            });
+            if (res.ok) loadGallery();
+            else alert("Failed to delete photo.");
+            return;
+          }
+
+          // Lightbox click
+          var imgWrapper = e.target.closest("[data-lightbox-src]");
+          if (imgWrapper) {
+            var src = imgWrapper.getAttribute("data-lightbox-src");
+            var caption = imgWrapper.getAttribute("data-lightbox-caption");
+            document.getElementById("lightbox-img").src = src;
+            document.getElementById("lightbox-caption").textContent = caption;
+            openModal("lightbox");
+          }
+        });
+
+        // Lightbox Close Handlers
+        document.getElementById("lightbox-close").addEventListener("click", function() {
+          closeModal("lightbox");
+        });
+        document.getElementById("lightbox").addEventListener("click", function(e) {
+          if (e.target.id === "lightbox") closeModal("lightbox");
         });
       });
 
