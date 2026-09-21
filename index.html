@@ -33,7 +33,7 @@
     <section id="about">
       <h2>About Us</h2>
       <p>
-        Macey says we are cool and awesome
+        Macey says "We are really cool and awesome!"
       </p>
     </section>
 
@@ -59,14 +59,14 @@
       </div>
     </section>
 
-    <!-- Photo Gallery Section -->
+    <!-- Photo Gallery Showcase Section -->
     <section id="gallery" class="content-section">
       <div class="section-header">
         <h2>Visual Transmissions</h2>
         <button id="admin-add-gallery-btn" class="admin-btn hidden" type="button">+ Add Photo</button>
       </div>
-      <div id="gallery-list" class="gallery-grid">
-        <p class="empty-state">No photos in the archives yet.</p>
+      <div id="gallery-container" class="gallery-showcase-container">
+        <p class="empty-state">Loading gallery...</p>
       </div>
     </section>
 
@@ -189,21 +189,13 @@
     </div>
   </div>
 
-  <!-- Fullscreen Lightbox -->
-  <div id="lightbox" class="lightbox-overlay hidden">
-    <button id="lightbox-close" class="lightbox-close" type="button" aria-label="Close Lightbox">×</button>
-    <div class="lightbox-content">
-      <img id="lightbox-img" class="lightbox-img" src="" alt="Fullscreen view">
-      <p id="lightbox-caption" class="lightbox-caption"></p>
-    </div>
-  </div>
-
   <script>
     (function () {
       var adminToken = sessionStorage.getItem("neon_admin_token") || null;
       var cachedEvents = [];
       var cachedNews = [];
       var cachedGallery = [];
+      var activeGalleryIndex = 0;
 
       function openModal(id) {
         var el = document.getElementById(id);
@@ -304,37 +296,68 @@
         }
       }
 
+      function renderGalleryShowcase() {
+        var container = document.getElementById("gallery-container");
+        if (cachedGallery.length === 0) {
+          container.innerHTML = '<p class="empty-state">No photos in the archives yet.</p>';
+          return;
+        }
+
+        if (activeGalleryIndex >= cachedGallery.length) activeGalleryIndex = 0;
+        if (activeGalleryIndex < 0) activeGalleryIndex = cachedGallery.length - 1;
+
+        var current = cachedGallery[activeGalleryIndex];
+
+        var adminControls = adminToken 
+          ? '<div class="admin-card-actions">' +
+              '<button type="button" class="edit-btn" data-edit-photo="' + escapeHtml(current.id) + '" title="Edit">✏️</button>' +
+              '<button type="button" class="delete-btn" data-del-photo="' + escapeHtml(current.id) + '" title="Delete">✕</button>' +
+            '</div>' 
+          : '';
+
+        var thumbsHtml = cachedGallery.map(function(photo, idx) {
+          var isActive = idx === activeGalleryIndex ? ' active' : '';
+          return (
+            '<div class="thumb-card' + isActive + '" data-thumb-index="' + idx + '">' +
+              '<img src="' + escapeHtml(photo.url) + '" alt="Thumbnail ' + (idx + 1) + '">' +
+            '</div>'
+          );
+        }).join("");
+
+        container.innerHTML = 
+          '<div class="showcase-main-card">' +
+            '<div class="showcase-stage">' +
+              '<button type="button" class="showcase-nav-btn prev" id="gallery-prev-btn" title="Previous Photo">❮</button>' +
+              '<img id="showcase-img" src="' + escapeHtml(current.url) + '" alt="' + escapeHtml(current.caption || 'Neon Oblivion') + '">' +
+              '<button type="button" class="showcase-nav-btn next" id="gallery-next-btn" title="Next Photo">❯</button>' +
+            '</div>' +
+            '<div class="showcase-info-bar">' +
+              '<div class="showcase-caption-wrap">' +
+                '<span class="showcase-caption">' + escapeHtml(current.caption || "Neon Oblivion Transmission") + '</span>' +
+                '<span class="showcase-counter">' + (activeGalleryIndex + 1) + ' / ' + cachedGallery.length + '</span>' +
+              '</div>' +
+              adminControls +
+            '</div>' +
+          '</div>' +
+          '<div class="showcase-thumbs-reel" id="thumbs-reel">' +
+            thumbsHtml +
+          '</div>';
+
+        // Auto-scroll active thumbnail into view
+        var activeThumb = container.querySelector(".thumb-card.active");
+        if (activeThumb) {
+          activeThumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+        }
+      }
+
       async function loadGallery() {
-        var container = document.getElementById("gallery-list");
+        var container = document.getElementById("gallery-container");
         try {
           var res = await fetch("/api/gallery");
           if (!res.ok) throw new Error("API error");
           var photos = await res.json();
           cachedGallery = Array.isArray(photos) ? photos : [];
-          if (cachedGallery.length === 0) {
-            container.innerHTML = '<p class="empty-state">No photos in the archives yet.</p>';
-            return;
-          }
-          container.innerHTML = cachedGallery.map(function(photo) {
-            var adminControls = adminToken 
-              ? '<div class="admin-card-actions">' +
-                  '<button type="button" class="edit-btn" data-edit-photo="' + escapeHtml(photo.id) + '" title="Edit">✏️</button>' +
-                  '<button type="button" class="delete-btn" data-del-photo="' + escapeHtml(photo.id) + '" title="Delete">✕</button>' +
-                '</div>' 
-              : '';
-
-            return (
-              '<div class="gallery-card">' +
-                '<div class="gallery-img-wrapper" data-lightbox-src="' + escapeHtml(photo.url) + '" data-lightbox-caption="' + escapeHtml(photo.caption || "") + '">' +
-                  '<img src="' + escapeHtml(photo.url) + '" alt="' + escapeHtml(photo.caption || "Neon Oblivion") + '" loading="lazy">' +
-                '</div>' +
-                '<div class="gallery-footer">' +
-                  '<span class="gallery-caption">' + escapeHtml(photo.caption || "Neon Oblivion") + '</span>' +
-                  adminControls +
-                '</div>' +
-              '</div>'
-            );
-          }).join("");
+          renderGalleryShowcase();
         } catch (err) {
           container.innerHTML = '<p class="empty-state">No photos in the archives yet.</p>';
         }
@@ -521,7 +544,7 @@
           }
         });
 
-        // Save Photo (Gallery)
+        // Save Photo
         document.getElementById("gallery-form").addEventListener("submit", async function(e) {
           e.preventDefault();
           var editId = document.getElementById("photo-id").value.trim();
@@ -551,7 +574,84 @@
           }
         });
 
-        // Event List Delegated Actions
+        // Gallery Interactivity: Navigation, Thumbs, Edit & Delete
+        var galleryCont = document.getElementById("gallery-container");
+        
+        galleryCont.addEventListener("click", async function(e) {
+          // Prev button
+          if (e.target.closest("#gallery-prev-btn")) {
+            activeGalleryIndex--;
+            renderGalleryShowcase();
+            return;
+          }
+
+          // Next button
+          if (e.target.closest("#gallery-next-btn")) {
+            activeGalleryIndex++;
+            renderGalleryShowcase();
+            return;
+          }
+
+          // Click on a thumbnail card
+          var thumb = e.target.closest("[data-thumb-index]");
+          if (thumb) {
+            activeGalleryIndex = parseInt(thumb.getAttribute("data-thumb-index"), 10);
+            renderGalleryShowcase();
+            return;
+          }
+
+          // Edit photo
+          var editTarget = e.target.closest("[data-edit-photo]");
+          if (editTarget) {
+            var id = editTarget.getAttribute("data-edit-photo");
+            var item = cachedGallery.find(function(p) { return p.id === id; });
+            if (item) {
+              document.getElementById("photo-id").value = item.id;
+              document.getElementById("photo-url").value = item.url || "";
+              document.getElementById("photo-caption").value = item.caption || "";
+              document.getElementById("gallery-modal-title").textContent = "Edit Photo";
+              openModal("gallery-modal");
+            }
+            return;
+          }
+
+          // Delete photo
+          var delTarget = e.target.closest("[data-del-photo]");
+          if (delTarget) {
+            var delId = delTarget.getAttribute("data-del-photo");
+            if (!confirm("Are you sure you want to delete this photo?")) return;
+
+            var res = await fetch("/api/gallery", {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + adminToken
+              },
+              body: JSON.stringify({ id: delId })
+            });
+            if (res.ok) {
+              if (activeGalleryIndex > 0) activeGalleryIndex--;
+              loadGallery();
+            } else {
+              alert("Failed to delete photo.");
+            }
+          }
+        });
+
+        // Keyboard Arrow Key Support for Gallery
+        window.addEventListener("keydown", function(e) {
+          if (cachedGallery.length === 0) return;
+          if (document.querySelector(".modal-overlay:not(.hidden)")) return; // Don't cycle if typing in a modal
+          if (e.key === "ArrowLeft") {
+            activeGalleryIndex--;
+            renderGalleryShowcase();
+          } else if (e.key === "ArrowRight") {
+            activeGalleryIndex++;
+            renderGalleryShowcase();
+          }
+        });
+
+        // Events List Actions
         document.getElementById("events-list").addEventListener("click", async function(e) {
           var editTarget = e.target.closest("[data-edit-event]");
           if (editTarget) {
@@ -587,7 +687,7 @@
           }
         });
 
-        // News List Delegated Actions
+        // News List Actions
         document.getElementById("news-list").addEventListener("click", async function(e) {
           var editTarget = e.target.closest("[data-edit-news]");
           if (editTarget) {
@@ -620,59 +720,6 @@
             if (res.ok) loadNews();
             else alert("Failed to delete post.");
           }
-        });
-
-        // Gallery List Delegated Actions (Lightbox, Edit & Delete)
-        document.getElementById("gallery-list").addEventListener("click", async function(e) {
-          var editTarget = e.target.closest("[data-edit-photo]");
-          if (editTarget) {
-            var id = editTarget.getAttribute("data-edit-photo");
-            var item = cachedGallery.find(function(p) { return p.id === id; });
-            if (item) {
-              document.getElementById("photo-id").value = item.id;
-              document.getElementById("photo-url").value = item.url || "";
-              document.getElementById("photo-caption").value = item.caption || "";
-              document.getElementById("gallery-modal-title").textContent = "Edit Photo";
-              openModal("gallery-modal");
-            }
-            return;
-          }
-
-          var delTarget = e.target.closest("[data-del-photo]");
-          if (delTarget) {
-            var delId = delTarget.getAttribute("data-del-photo");
-            if (!confirm("Are you sure you want to delete this photo?")) return;
-
-            var res = await fetch("/api/gallery", {
-              method: "DELETE",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + adminToken
-              },
-              body: JSON.stringify({ id: delId })
-            });
-            if (res.ok) loadGallery();
-            else alert("Failed to delete photo.");
-            return;
-          }
-
-          // Lightbox click
-          var imgWrapper = e.target.closest("[data-lightbox-src]");
-          if (imgWrapper) {
-            var src = imgWrapper.getAttribute("data-lightbox-src");
-            var caption = imgWrapper.getAttribute("data-lightbox-caption");
-            document.getElementById("lightbox-img").src = src;
-            document.getElementById("lightbox-caption").textContent = caption;
-            openModal("lightbox");
-          }
-        });
-
-        // Lightbox Close Handlers
-        document.getElementById("lightbox-close").addEventListener("click", function() {
-          closeModal("lightbox");
-        });
-        document.getElementById("lightbox").addEventListener("click", function(e) {
-          if (e.target.id === "lightbox") closeModal("lightbox");
         });
       });
 
