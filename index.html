@@ -33,7 +33,7 @@
     <section id="about">
       <h2>About Us</h2>
       <p>
-        Macey says "We are really cool and awesome!"
+        Neon Oblivion fuses crushing guitar riffs and driving rhythms with sharp, melodic precision. Drawing inspiration from classic heavy metal and modern alternative anthems, the band crafts high-energy originals and hard-hitting reimagined tracks built for the stage. Loud, dynamic, and relentless, Neon Oblivion delivers music with raw weight and unmistakable atmosphere.
       </p>
     </section>
 
@@ -298,6 +298,7 @@
 
       function renderGalleryShowcase() {
         var container = document.getElementById("gallery-container");
+        if (!container) return;
         if (cachedGallery.length === 0) {
           container.innerHTML = '<p class="empty-state">No photos in the archives yet.</p>';
           return;
@@ -343,7 +344,6 @@
             thumbsHtml +
           '</div>';
 
-        // Auto-scroll active thumbnail into view
         var activeThumb = container.querySelector(".thumb-card.active");
         if (activeThumb) {
           activeThumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
@@ -359,7 +359,7 @@
           cachedGallery = Array.isArray(photos) ? photos : [];
           renderGalleryShowcase();
         } catch (err) {
-          container.innerHTML = '<p class="empty-state">No photos in the archives yet.</p>';
+          if (container) container.innerHTML = '<p class="empty-state">No photos in the archives yet.</p>';
         }
       }
 
@@ -574,74 +574,75 @@
           }
         });
 
-        // Gallery Interactivity: Navigation, Thumbs, Edit & Delete
+        // Gallery Container Delegated Actions
         var galleryCont = document.getElementById("gallery-container");
-        
-        galleryCont.addEventListener("click", async function(e) {
-          // Prev button
-          if (e.target.closest("#gallery-prev-btn")) {
-            activeGalleryIndex--;
-            renderGalleryShowcase();
-            return;
-          }
-
-          // Next button
-          if (e.target.closest("#gallery-next-btn")) {
-            activeGalleryIndex++;
-            renderGalleryShowcase();
-            return;
-          }
-
-          // Click on a thumbnail card
-          var thumb = e.target.closest("[data-thumb-index]");
-          if (thumb) {
-            activeGalleryIndex = parseInt(thumb.getAttribute("data-thumb-index"), 10);
-            renderGalleryShowcase();
-            return;
-          }
-
-          // Edit photo
-          var editTarget = e.target.closest("[data-edit-photo]");
-          if (editTarget) {
-            var id = editTarget.getAttribute("data-edit-photo");
-            var item = cachedGallery.find(function(p) { return p.id === id; });
-            if (item) {
-              document.getElementById("photo-id").value = item.id;
-              document.getElementById("photo-url").value = item.url || "";
-              document.getElementById("photo-caption").value = item.caption || "";
-              document.getElementById("gallery-modal-title").textContent = "Edit Photo";
-              openModal("gallery-modal");
+        if (galleryCont) {
+          galleryCont.addEventListener("click", async function(e) {
+            // Previous button
+            if (e.target.closest("#gallery-prev-btn")) {
+              activeGalleryIndex--;
+              renderGalleryShowcase();
+              return;
             }
-            return;
-          }
 
-          // Delete photo
-          var delTarget = e.target.closest("[data-del-photo]");
-          if (delTarget) {
-            var delId = delTarget.getAttribute("data-del-photo");
-            if (!confirm("Are you sure you want to delete this photo?")) return;
-
-            var res = await fetch("/api/gallery", {
-              method: "DELETE",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + adminToken
-              },
-              body: JSON.stringify({ id: delId })
-            });
-            if (res.ok) {
-              if (activeGalleryIndex > 0) activeGalleryIndex--;
-              loadGallery();
-            } else {
-              alert("Failed to delete photo.");
+            // Next button
+            if (e.target.closest("#gallery-next-btn")) {
+              activeGalleryIndex++;
+              renderGalleryShowcase();
+              return;
             }
-          }
-        });
+
+            // Thumbnail click
+            var thumb = e.target.closest("[data-thumb-index]");
+            if (thumb) {
+              activeGalleryIndex = parseInt(thumb.getAttribute("data-thumb-index"), 10);
+              renderGalleryShowcase();
+              return;
+            }
+
+            // Edit photo
+            var editTarget = e.target.closest("[data-edit-photo]");
+            if (editTarget) {
+              var id = editTarget.getAttribute("data-edit-photo");
+              var item = cachedGallery.find(function(p) { return p.id === id; });
+              if (item) {
+                document.getElementById("photo-id").value = item.id;
+                document.getElementById("photo-url").value = item.url || "";
+                document.getElementById("photo-caption").value = item.caption || "";
+                document.getElementById("gallery-modal-title").textContent = "Edit Photo";
+                openModal("gallery-modal");
+              }
+              return;
+            }
+
+            // Delete photo
+            var delTarget = e.target.closest("[data-del-photo]");
+            if (delTarget) {
+              var delId = delTarget.getAttribute("data-del-photo");
+              if (!confirm("Are you sure you want to delete this photo?")) return;
+
+              var res = await fetch("/api/gallery", {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": "Bearer " + adminToken
+                },
+                body: JSON.stringify({ id: delId })
+              });
+              if (res.ok) {
+                if (activeGalleryIndex > 0) activeGalleryIndex--;
+                loadGallery();
+              } else {
+                alert("Failed to delete photo.");
+              }
+            }
+          });
+        }
 
         // Keyboard Arrow Key Support for Gallery
         window.addEventListener("keydown", function(e) {
           if (cachedGallery.length === 0) return;
-          if (document.querySelector(".modal-overlay:not(.hidden)")) return; // Don't cycle if typing in a modal
+          if (document.querySelector(".modal-overlay:not(.hidden)")) return;
           if (e.key === "ArrowLeft") {
             activeGalleryIndex--;
             renderGalleryShowcase();
