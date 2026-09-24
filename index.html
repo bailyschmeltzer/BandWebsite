@@ -22,6 +22,7 @@
       <a href="#gallery">Gallery</a>
       <a href="#links">Listen</a>
       <a href="#store">Store</a>
+      <a href="#support">Support</a>
       <a href="#socials">Socials</a>
     </nav>
   </header>
@@ -79,20 +80,31 @@
       </div>
     </section>
 
+    <!-- Store Section -->
+    <section id="store" class="store-section">
+      <h2>Store</h2>
+      <div class="links">
+        <a class="btn" href="/store" target="_blank" rel="noopener">Visit Store</a>
+      </div>
+    </section>
+
+    <!-- Support / Tip Jar Section -->
+    <section id="support" class="support-section">
+      <h2>Support the Band</h2>
+      <p class="support-desc">Direct contributions fuel our recordings, tour fuel, and new music.</p>
+      <div class="links">
+        <a class="btn btn-paypal" href="https://paypal.me/neonoblivion614" target="_blank" rel="noopener">
+          Donate via PayPal
+        </a>
+      </div>
+    </section>
+
     <!-- Socials Section -->
     <section id="socials">
       <h2>Socials</h2>
       <div class="links">
         <a class="btn" href="https://tiktok.com/@neon_oblivion_band?_r=1&_t=ZT-92d4cjNk8c3" target="_blank" rel="noopener">TikTok</a>
         <a class="btn" href="https://www.instagram.com/_neon_oblivion" target="_blank" rel="noopener">Instagram</a>
-      </div>
-    </section>
-
-    <!-- Store Section -->
-    <section id="store" class="store-section">
-      <h2>Store</h2>
-      <div class="links">
-        <a class="btn" href="https://neon-oblivion.myshopify.com/" target="_blank" rel="noopener">Visit Store</a>
       </div>
     </section>
 
@@ -717,7 +729,7 @@
         canvas.height = h;
         ctx.clearRect(0, 0, w, h);
         const numStars = Math.floor((w * h) / 1800);
-        for (var i = 0; i < numStars; i++) {
+        for (let i = 0; i < numStars; i++) {
           var x = Math.random() * w;
           var y = Math.random() * h;
           var r = Math.random() * 1.2 + 0.3;
